@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Entrenador de Oído Musical</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f0f0f0;
+      padding: 20px;
+    }
+    select, button {
+      padding: 10px;
+      margin: 10px;
+      font-size: 16px;
+    }
+    .feedback {
+      font-size: 20px;
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🎼 Entrenador de Oído Musical</h1>
+
+  <label for="categoria">Selecciona una categoría:</label>
+  <select id="categoria" onchange="cargarOpciones()">
+    <option value="">-- Elige una categoría --</option>
+    <option value="mayor_nat">Mayores Naturales</option>
+    <option value="mayor_sus">Mayores Sostenidos</option>
+    <option value="menor_nat">Menores Naturales</option>
+    <option value="menor_sus">Menores Sostenidos</option>
+    <option value="m7_nat">Menores 7 Naturales</option>
+    <option value="m7_sus">Menores 7 Sostenidos</option>
+    <option value="siete_nat">Séptimos Naturales</option>
+    <option value="siete_sus">Séptimos Sostenidos</option>
+    <option value="maj7_nat">Maj7 Naturales</option>
+    <option value="maj7_sus">Maj7 Sostenidos</option>
+  </select>
+
+  <br>
+  <button onclick="reproducirAcorde()">▶️ Reproducir Acorde</button>
+
+  <br>
+  <select id="opcionesAcordes"></select>
+  <button onclick="verificarRespuesta()">✅ Verificar</button>
+
+  <div class="feedback" id="feedback"></div>
+
+  <audio id="audioPlayer"></audio>
+
+  <script>
+    const acordes = {
+      mayor_nat: ["CMaj", "DMaj", "EMaj", "Fmaj", "GMaj", "AMaj", "BMaj"],
+      mayor_sus: ["C_sharpMaj", "D_sharpMaj", "F_sharpMaj", "G_sharpMaj", "A_sharpMaj"],
+      menor_nat: ["CMin", "DMin", "EMin", "FMin", "GMin", "AMin", "BMin"],
+      menor_sus: ["C_sharpMin", "D_sharpMin", "F_sharpMin", "G_sharpMin", "A_sharpMin"],
+      m7_nat: ["Cm7", "Dm7", "Em7", "Fm7", "Gm7", "Am7", "Bm7"],
+      m7_sus: ["C_sharpm7", "D_sharpm7", "F_sharpm7", "G_sharpm7", "A_sharpm7"],
+      siete_nat: ["C7", "D7", "E7", "F7", "G7", "A7", "B7"],
+      siete_sus: ["C_sharp7", "D_sharp7", "F_sharp7", "G_sharp7", "A_sharp7"],
+      maj7_nat: ["CMaj7", "DMaj7", "EMaj7", "FMaj7", "GMaj7", "AMaj7", "BMaj7"],
+      maj7_sus: ["C_sharpMaj7", "D_sharpMaj7", "F_sharpMaj7", "G_sharpMaj7", "A_sharpMaj7"]
+    };
+
+    const rutasCarpetas = {
+      mayor_nat: "Acordes/Mayores",
+      mayor_sus: "Acordes/Mayores Sostenidos",
+      menor_nat: "Acordes/Menores",
+      menor_sus: "Acordes/Menores Sostenidos",
+      m7_nat: "Acordes/Mayores Septimos",
+      m7_sus: "Acordes/Mayores Septimos Sostenidos",
+      siete_nat: "Acordes/Septimos",
+      siete_sus: "Acordes/Septimos Sostenidos",
+      maj7_nat: "Acordes/Mayores Septimos",
+      maj7_sus: "Acordes/Mayores Septimos Sostenidos"
+    };
+
+    let acordeActual = "";
+    let categoriaActual = "";
+
+    function cargarOpciones() {
+      const categoria = document.getElementById("categoria").value;
+      const select = document.getElementById("opcionesAcordes");
+      select.innerHTML = "";
+
+      if (!categoria || !acordes[categoria]) return;
+
+      categoriaActual = categoria;
+      acordes[categoria].forEach(acorde => {
+        const option = document.createElement("option");
+        option.value = acorde;
+        option.textContent = acorde.replace(/_/g, "").replace(/sharp/g, "#");
+        select.appendChild(option);
+      });
+
+      document.getElementById("feedback").textContent = "";
+      acordeActual = "";
+    }
+
+    function generarAcordeAleatorio() {
+      const lista = acordes[categoriaActual];
+      const index = Math.floor(Math.random() * lista.length);
+      return lista[index];
+    }
+
+    function reproducirAudio(nombreArchivo) {
+      const carpeta = rutasCarpetas[categoriaActual] || "Acordes";
+      const audio = document.getElementById("audioPlayer");
+      audio.src = `${carpeta}/${nombreArchivo}.wav`;
+      audio.play();
+    }
+
+    function reproducirAcorde() {
+      if (!categoriaActual) return;
+
+      if (!acordeActual) {
+        acordeActual = generarAcordeAleatorio();
+      }
+
+      reproducirAudio(acordeActual);
+      document.getElementById("feedback").textContent = "";
+    }
+
+    function verificarRespuesta() {
+      const seleccion = document.getElementById("opcionesAcordes").value;
+      const feedback = document.getElementById("feedback");
+
+      if (!acordeActual) {
+        feedback.textContent = "❗ Primero debes reproducir un acorde.";
+        feedback.style.color = "orange";
+        return;
+      }
+
+      if (!seleccion) {
+        alert("Por favor selecciona una opción antes de verificar.");
+        return;
+      }
+
+      if (seleccion === acordeActual) {
+        feedback.textContent = "✅ ¡Correcto!";
+        feedback.style.color = "green";
+        acordeActual = ""; // listo para reproducir otro
+      } else {
+        const nombre = acordeActual.replace(/_/g, "").replace(/sharp/g, "#");
+        feedback.textContent = `❌ Incorrecto. Era: ${nombre}`;
+        feedback.style.color = "red";
+        acordeActual = generarAcordeAleatorio(); // se genera uno nuevo pero no se reproduce
+      }
+    }
+  </script>
+
+</body>
+</html>
